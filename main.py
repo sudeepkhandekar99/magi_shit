@@ -15,7 +15,7 @@ strategy = st.selectbox('Select the trading strategy:', options=['SMA', 'EMA'])
 
 if st.button('Run Backtest'):
     # Read data for the given stock symbol and date range
-    data = pd.read_csv(f"/workspaces/magi_shit/PythonForFinance/13. Data Collection/Data/{symbol}.csv", parse_dates=['Date'], index_col='Date')
+    data = pd.read_csv(f"./13. Data Collection/Data/{symbol}.csv", parse_dates=['Date'], index_col='Date')
     data = data.loc[start_date:end_date]
 
     # Calculate moving averages and trading signals
@@ -79,4 +79,3 @@ if st.button('Run Backtest'):
     st.write(f'Win Trades: {win_trades}')
     st.write(f'Loss Trades: {loss_trades}')
     st.write(f'Win Rate: {win_rate:.2f}%')
-
