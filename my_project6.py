@@ -20,11 +20,12 @@ principal = st.number_input('Enter the principal amount:', value=10000.0)
 symbol = st.text_input('Enter the stock symbol:')
 start_date = st.date_input('Enter the start date:')
 end_date = st.date_input('Enter the end date:')
-strategy = st.selectbox('Select the trading strategy:', options=['SMA', 'EMA'])
+strategy = st.selectbox('Select the trading strategy:', options=['SMA', 'EMA', 'Mean Reversion'])
 
 if st.button('Run Backtest'):
     # Read data for the given stock symbol and date range
-    data = pd.read_csv(f"/content/drive/MyDrive/Data/{symbol}.csv", parse_dates=['Date'], index_col='Date')
+    data = pd.read_csv(f"/workspaces/magi_shit/PythonForFinance/13. Data Collection/Data/{symbol}.csv", parse_dates=['Date'], index_col='Date')
+
     data = data.loc[start_date:end_date]
 
     # Calculate moving averages and trading signals
@@ -36,6 +37,11 @@ if st.button('Run Backtest'):
         data['20_EMA'] = data.Close.ewm(span=20, adjust=False).mean()
         data['50_EMA'] = data.Close.ewm(span=50, adjust=False).mean()
         data['Signal'] = np.where(data['20_EMA'] > data['50_EMA'], 1, 0)
+    elif strategy == 'Mean Reversion':
+        data['5_SMA'] = data.Close.rolling(window=5, min_periods=1).mean()
+        data['30_SMA'] = data.Close.rolling(window=30, min_periods=1).mean()
+        data['Price Change'] = data.Close.pct_change()
+        data['Signal'] = np.where((data['5_SMA'] < data['30_SMA']) & (data['Close'] < 0.98*data['5_SMA']), 1, np.where((data['5_SMA'] > data['30_SMA']) & (data['Close'] > 1.02*data['5_SMA']), -1, 0))
     else:
         st.warning('Invalid strategy selected!')
         st.stop()
@@ -51,6 +57,9 @@ if st.button('Run Backtest'):
     elif strategy == 'EMA':
         data['20_EMA'].plot(color = 'b',label = '20-day EMA')
         data['50_EMA'].plot(color = 'g', label = '50-day EMA')
+    elif strategy == 'Mean Reversion':
+        data['5_SMA'].plot(color = 'b', label = '5-day SMA')
+        data['30_SMA'].plot(color = 'g', label = '30-day SMA')
     ax.plot(data[data['Position'] == 1].index, data['Close'][data['Position'] == 1], '^', markersize = 15, color = 'g', label = 'buy')
     ax.plot(data[data['Position'] == -1].index, data['Close'][data['Position'] == -1], 'v', markersize = 15, color = 'r', label = 'sell')
     ax.set_ylabel('Price in Rupees', fontsize = 15 )
@@ -103,8 +112,3 @@ if st.button('Run Backtest'):
     st.write(f'Average Profit per Trade: {avg_profit_per_trade:.2f}')
     st.write(f'Average Profit per Win Trade: {avg_profit_per_win_trade:.2f}')
     st.write(f'Average Loss per Loss Trade: {avg_loss_per_loss_trade:.2f}')
-
-from google.colab import drive
-drive.mount('/content/drive')
-
-"""# New Section"""
